@@ -299,5 +299,124 @@ class BubblePainter extends CustomPainter {
   bool shouldRepaint(covariant BubblePainter oldDelegate) => true;
 }
 
+////Google////
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: <String>['email']);
+
+  @override
+  void initState() {
+    _googleSignIn.signOut();
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) {
+      if (account != null) {
+        account.authentication.then((value) {
+          _googleView(value);
+        });
+      }
+    });
+    _googleSignIn.signInSilently();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _googleSignIn.signOut();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(onPressed: _google, child: Text("Google")),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _google() async {
+    try {
+      await _googleSignIn.signIn();
+    } catch (_) {}
+  }
+
+  void _googleView(GoogleSignInAuthentication value) {
+    print(value.idToken);
+  }
+}
+
+//////google davomi////
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:kahoot/ui/auth/login_screen.dart';
+
+Future<void> _backgroundHandler(RemoteMessage message) async {
+  print('Background running');
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
+
+  _initLocalNotification();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: const LoginScreen(),
+    );
+  }
+}
+
+void _initLocalNotification() {
+  const AndroidInitializationSettings androidSetting =
+  AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const DarwinInitializationSettings iosSetting = DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
+  );
+
+  final InitializationSettings initializeSetting = InitializationSettings(
+    android: androidSetting,
+    iOS: iosSetting,
+  );
+
+  FlutterLocalNotificationsPlugin().initialize(
+    initializeSetting,
+    onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+  );
+}
+
+void onDidReceiveNotificationResponse(
+    NotificationResponse notificationResponse) async {
+  final String? payload = notificationResponse.payload;
+  if (notificationResponse.payload != null) {
+    debugPrint('notification payload: $payload');
+  }
+}
 
 
